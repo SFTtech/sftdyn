@@ -1,14 +1,19 @@
-from http.server import BaseHTTPRequestHandler
-from sftdyn.nsupdater import handle_request
+import sftdyn.args as args
+from subprocess import Popen, PIPE
 
-class GetHandler(BaseHTTPRequestHandler):
-    def do_GET(self):
-        requestkey = self.path.lstrip('/')
-        if handle_request(requestkey, self.client_address[0]):
-            text, code = "OK", 200
-        else:
-            text, code = "FAIL", 403
+def handle_request(ckey, ip):
+    if ckey not in args.clients:
+        print("Illegal key from " + ip)
+        return False
 
-        self.send_response(code)
-        self.end_headers()
-        self.wfile.write(text.encode('utf-8'))
+    print("Updating " + args.clients[ckey] + " to " + ip)
+
+    s = args.nsupdatecommand
+    s = s.replace('$HOST', args.clients[ckey])
+    s = s.replace('$IP', ip)
+    s = s.replace('$ZONE', args.zone)
+
+    p = Popen(['nsupdate', '-l'], stdin=PIPE)
+    p.communicate(input=s.encode('utf-8'))
+
+    return p.returncode is 0
