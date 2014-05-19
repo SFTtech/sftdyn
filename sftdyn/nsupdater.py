@@ -14,6 +14,6 @@ def handle_request(ckey, ip):
     s = s.replace('$ZONE', args.zone)
 
     p = Popen(['nsupdate', '-l'], stdin=PIPE)
-    result = p.communicate(input=s.encode('utf-8'))[0]
+    p.communicate(input=s.encode('utf-8'))
 
-    return result is 0
+    return p.returncode is 0

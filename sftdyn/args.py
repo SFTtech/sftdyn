@@ -15,7 +15,7 @@ p.add_argument("-l", "--listen", type=str, default="0.0.0.0")
 p.add_argument("--conf", type=str,
     help="conf file, will be exec'd as python3, with args as global()")
 p.add_argument("--nsupdatecommand", type=str,
-    default="zone $ZONE\nupdate delete $HOST A\nadd $HOST 30 A $IP\nsend\n",
+    default="zone $ZONE\nupdate delete $HOST A\nupdate add $HOST 30 A $IP\nsend\n",
     help="template command list for nsupdate")
 
 def parse():

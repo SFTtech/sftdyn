@@ -11,6 +11,6 @@ def serve():
         server_side=True,
         keyfile=args.key,
         certfile=args.cert,
-        ssl_version=ssl.PROTOCOL_TLSv1_2)
+        ssl_version=ssl.PROTOCOL_TLSv1)
     print("listening on " + args.listen + ":" + str(args.port))
     httpd.serve_forever()
