@@ -1,10 +1,15 @@
 #!/usr/bin/env python3
-import http.server, ssl
+import http.server
+import ssl
+import sftdyn.args
+import sftdyn.server
 
-server_address = ('localhost', 4443)
-httpd = http.server.HTTPServer(server_address, http.server.SimpleHTTPRequestHandler)
-httpd.socket = ssl.wrap_socket(httpd.socket,
-    server_side=True,
-    certfile='localhost.pem',
-    ssl_version=ssl.PROTOCOL_TLSv1)
-httpd.serve_forever()
+def main():
+    sftdyn.args.parse()
+    try:
+        sftdyn.server.serve()
+    except KeyboardInterrupt:
+        pass
+
+if __name__ == "__main__":
+    main()
