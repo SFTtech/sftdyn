@@ -1,0 +1,5 @@
+key="/tmp/snakeoil.key"
+cert="/tmp/snakeoil.crt"
+zone="dyn.sft.mx"
+clients["password"]="client.dyn.sft.mx"
+clients["anotherpassword"]="anotherclient.dyn.sft.mx"
