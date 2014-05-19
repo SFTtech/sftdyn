@@ -1,8 +1,8 @@
 sftdyn is a minimalistic (< 100 lines!) python script that lets you easily create a dyndns.org-like service, using your own DNS server.
 
-# Quick Guide
+## Quick Guide
 
-### Nameserver
+#### Nameserver
 Somewhere in `named.conf`, add
 
     zone "dyn.sft.mx" IN {
@@ -22,9 +22,9 @@ If you want to use `dyn.sft.mx` as the hostname for your update requests, add a 
 
     IN A 12.345.678.901
 
-### sftdyn
+#### sftdyn
 To install *sftdyn*, use `./setup.py install`. You can then launch it via `sftdyn [command-line options]`.
-You can pass all info to `sftdyn` via command-line options, or use `--conf=file.cfg` to load them from a file. A sample conf file is provided in `sample.conf`.
+It can be configured via command-line parameters, or a conf file (`--conf=file.conf`). A sample conf file is provided in `sample.conf`.
 
 In the conf file, you **must** specify
  - key (server.key)
@@ -49,7 +49,7 @@ Add clients to the conf file like this:
 
 sftdyn should run under the same user as your DNS server.
 
-### Client
+#### Client
 Just set up a cronjob that talks to sftdyn every few minutes:
 
     /10 * * * * curl https://dyn.sft.mx:4443/mysecretupdatekey
@@ -62,7 +62,7 @@ If your certificate was self-signed, curl will refuse to talk to the server.
  - Quick 'n dirty: Use `curl -k` to ignore the warning. MITM attackers could steal your update key that way.
  - Clean: Copy `server.crt` to the client, and use `curl --cacert=server.crt`. This is even more secure  than a paid certificate.
 
-# About
+## About
 I wrote this script after the free dyndns.org service was shut down. First, I tried using nsupdate manually, but that's getting annoying really fast, so I decided to build this.
 
 I chose HTTPs for security purposes; with the plain HTTP protocols of major dynamic dns providers, anybody who sniffs on your connection can hijack your domain name. With the HTTPs security layer of sftdyn, that's not possible anymore.
@@ -73,7 +73,7 @@ If you want to, you can make the update key look like an actual more complex req
 
 The conf file is actually python, and is executed as such when loaded, so you can put arbitrarily complex stuff there; for example, you could assemble the clients directory from some external information source. You could even make it into some complex class that dynamically does... stuff... whatever. have fun.
 
-# Development
+## Development
 IMHO, the project is feature-complete; it has everything that **I** currently want.
 
 Features that might be useful includes:
