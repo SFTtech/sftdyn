@@ -1,3 +1,3 @@
 #!/usr/bin/env python3
-from sftdyn.main import main
+from sftdyn.__main__ import main
 main()
