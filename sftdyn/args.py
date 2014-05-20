@@ -13,7 +13,9 @@ p.add_argument("-l", "--listen", type=str, default="0.0.0.0")
 p.add_argument("--conf", type=str,
                help="conf file, will be exec'd as python3")
 p.add_argument("--nsupdatecommand", type=str,
-               default="update delete $HOST A\nupdate add $HOST 30 A $IP\nsend\n",
+               default="update delete $HOST A\n" +
+                       "update add $HOST 30 A $IP\n" +
+                       "send\n",
                help="template command list for nsupdate")
 
 
