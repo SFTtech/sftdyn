@@ -7,8 +7,8 @@ setup(
     version=VERSION,
     description="HTTPs-based DDNS updater",
     long_description="dyndns-like service that accepts update requests " +
-        "via HTTPs and forwards them to a locally running DNS " +
-        "server via nsupdate -l",
+                     "via HTTPs and forwards them to a locally running DNS " +
+                     "server via nsupdate -l",
     author="Michael Enßlin",
     author_email="michael@ensslin.cc",
     url="https://github.com/SFTtech/sftdyn",
