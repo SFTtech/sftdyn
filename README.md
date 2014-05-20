@@ -25,7 +25,7 @@ If you want to use `dyn.sft.mx` as the hostname for your update requests, add a 
     IN A 12.345.678.901
 
 #### sftdyn
-To install *sftdyn*, use `./setup.py install`. Launch it with `sftdyn [command-line options]`.
+To install *sftdyn*, use `pip install sftdyn` or `./setup.py install`. Launch it with `sftdyn [command-line options]`.
 
 Configuration is by command-line parameters, or a conf file (`--conf=file.conf`). A sample conf file is provided in `sample.conf`.
 
