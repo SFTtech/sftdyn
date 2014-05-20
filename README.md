@@ -31,7 +31,6 @@ It can be configured via command-line parameters, or a conf file (`--conf=file.c
 In the conf file, you **must** specify
  - key (server.key)
  - cert (server.crt)
- - zone (dyn.sft.mx)
  - a list of clients
 
 sftdyn relies on HTTPs for security, so you need a certificate/key. You can buy one from your DNS provider, or create a self-signed one; both have their benefit.
