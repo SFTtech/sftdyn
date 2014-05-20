@@ -2,7 +2,6 @@
 from distutils.core import setup
 from sftdyn import VERSION
 from sys import version_info
-import sys
 
 if version_info[0] < 3:
     print("use python3 to install sftdyn (e.g. pip-3.2)")
