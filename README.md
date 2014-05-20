@@ -93,6 +93,7 @@ Features that _might_ be useful, which I _might_ implement if someone asked nice
  - A plain HTTP version for our less ~~paranoid~~ security-aware fellows
  - A version that is supported by common router's dynamic DNS feature
  - Support to run this inside an Apache web server
+ - Initscripts for _your distribution here_
  - I'm sure there are more
 
 If you have any requests, ideas, feedback, bug reports, piles of money, are simply filled with pure hatred, or just need help getting the damn thing to run, join `irc.freenode.net/#sfttech` (I'm mic_e).
