@@ -1,4 +1,6 @@
-sftdyn is a minimalistic (~ 100 lines) python script that lets you easily create a dyndns.org-like service, using your own DNS server.
+sftdyn is a minimalistic (~ 100 lines) dynamic DNS server that accepts update requests via HTTPs and forwards them to a locally running DNS server via `nsupdate -l`.
+
+It lets you easily create a dyndns.org-like service, using your own DNS server.
 
 ## Quick Guide
 

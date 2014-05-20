@@ -11,10 +11,11 @@ if version_info[0] < 3:
 setup(
     name="sftdyn",
     version=VERSION,
-    description="HTTPs-based DDNS updater",
-    long_description="dyndns-like service that accepts update requests " +
+    description="HTTPs-based dynamic DNS updater server",
+    long_description="dyndns.org-like service that accepts update requests " +
                      "via HTTPs and forwards them to a locally running DNS " +
-                     "server via nsupdate -l. Readme: " +
+                     "server via nsupdate -l.\n" +
+                     "Readme: " +
                      "https://github.com/SFTtech/sftdyn/blob/master/README.md",
     author="Michael Ensslin",
     author_email="michael@ensslin.cc",
