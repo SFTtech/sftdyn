@@ -6,6 +6,7 @@ from subprocess import Popen, PIPE
 
 currentips = {}
 
+
 def handle_request(key, ip):
     if not key:
         return ip, 200
@@ -30,13 +31,15 @@ def handle_request(key, ip):
     else:
         return "FAIL", 500
 
+
 class GetHandler(BaseHTTPRequestHandler):
     def do_GET(self):
         path = self.path.lstrip('/')
-        text, code = handle_request(path, self.client_address[0]):
+        text, code = handle_request(path, self.client_address[0])
         self.send_response(code)
         self.end_headers()
         self.wfile.write(text.encode('utf-8'))
+
 
 def serve():
     addr = (args.listen, args.port)
