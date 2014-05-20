@@ -76,13 +76,13 @@ The conf file is actually python, and is executed as such when loaded, so you ca
 ## Development
 IMHO, the project is feature-complete; it has everything that **I** currently want.
 
-Features that might be useful includes:
+Features that _might_ be useful, which I'd consider implementing if someone asked nicely:
  - A plain HTTP version for our less ~~paranoid~~ security-aware fellows
  - A version that is supported by common router's dynamic DNS feature
- - I'm sure there is more
+ - I'm sure there are more
 
-If you want to give me your requests, feedback, bug reports, piles of money or just pure hatred, join `irc.freenode.net/#sfttech` (I'm mic_e).
+If you have any requests, ideas, feedback, bug reports, piles of money, are simply filled with pure hatred, or just need help getting the damn thing to run, join `irc.freenode.net/#sfttech` (I'm mic_e).
 
-If you actually _did_ implement a useful feature in a sufficiently non-bloaty way, please send a pull request.
+If you actually _did_ implement a useful feature in a sufficiently non-bloaty way, please send a pull request; I'd be happy to merge it.
 
 The license is `GNU GPLv3+`.
