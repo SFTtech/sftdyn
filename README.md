@@ -2,6 +2,8 @@ sftdyn is a minimalistic (< 100 lines!) python script that lets you easily creat
 
 ## Quick Guide
 
+This guide assumes that you're using bind, your zone is dyn.sft.mx, and your server's IP is 12.345.678.901. You'll want to adjust that.
+
 #### Nameserver
 Somewhere in `named.conf`, add
 
