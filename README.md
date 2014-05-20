@@ -1,4 +1,4 @@
-sftdyn is a minimalistic (< 100 lines!) python script that lets you easily create a dyndns.org-like service, using your own DNS server.
+sftdyn is a minimalistic (~ 100 lines) python script that lets you easily create a dyndns.org-like service, using your own DNS server.
 
 ## Quick Guide
 
