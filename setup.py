@@ -1,6 +1,12 @@
 #!/usr/bin/env python3
 from distutils.core import setup
 from sftdyn import VERSION
+from sys import version_info
+import sys
+
+if version_info[0] < 3:
+    print("use python3 to install sftdyn (e.g. pip-3.2)")
+    exit(1)
 
 setup(
     name="sftdyn",
@@ -10,7 +16,7 @@ setup(
                      "via HTTPs and forwards them to a locally running DNS " +
                      "server via nsupdate -l. Readme: " +
                      "https://github.com/SFTtech/sftdyn/blob/master/README.md",
-    author="Michael Enßlin",
+    author="Michael Ensslin",
     author_email="michael@ensslin.cc",
     url="https://github.com/SFTtech/sftdyn",
     license="GPLv3 or higher",
