@@ -66,7 +66,7 @@ If your certificate was self-signed, curl will refuse to talk to the server.
 ## About
 I wrote this script after the free dyndns.org service was shut down. After a week or so of using plain nsupdate, I was annoyed enough to decide to write this.
 
-It is the main goal to stay as minimal as possible; for example, I deliberately didn't implement a way to specify the hostname or IP that you want to update; just a simple secret update key is perfectly good for the intended purpose of this project. If you feel like it, you can make the update key look like a more complex request; everything except a colon or \0 is allowed. Example: `?host=test.sft.mx&key=90bbd8698198ea76`.
+It is the main goal to stay as minimal as possible; for example, I deliberately didn't implement a way to specify the hostname or IP that you want to update; just a simple secret update key is perfectly good for the intended purpose of this project. If you feel like it, you can make the update key look like a more complex request; every character is allowed. Example: `?host=test.sft.mx&key=90bbd8698198ea76`.
 
 The conf file is executed as python code in the args context, so you can fill it with arbitrarily complex stuff; for example, you could assemble the client list some external information source. You could even make it into some complex class instead of a python dict, and make it dynamically process the update keys. Whatever you want.
 
