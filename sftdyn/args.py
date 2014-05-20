@@ -22,7 +22,7 @@ def parse():
     args.clients = {}
 
     if not os.path.isfile(args.conffile):
-        p.error("Not a valid conf file: " + args.conf)
+        p.error("Not a valid conf file: " + args.conffile)
 
     exec(open(args.conffile).read(), args.__dict__)
 
