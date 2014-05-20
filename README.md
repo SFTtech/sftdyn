@@ -27,11 +27,9 @@ If you want to use `dyn.sft.mx` as the hostname for your update requests, add a 
 #### sftdyn
 To install *sftdyn*, use `pip install sftdyn` or `./setup.py install`. Launch it with `sftdyn [command-line options]`.
 
-Configuration is by command-line parameters, or a conf file (`--conf=file.conf`). A sample conf file is provided in `sample.conf`.
+Configuration is by command-line parameters and conf file. A sample conf file is provided in `sample.conf`. If no conf file name is provided, `/etc/sftdyn/conf` is used. The conf file is the only place to specify update keys/hostnames.
 
-sftdyn relies on HTTPs for security, so you **must** provide a X.509 key and certificate.
-
-You can buy a cert from your DNS provider, or create a self-signed one; both have their benefits.
+sftdyn relies on HTTPs for security, so you **must** provide a X.509 key and certificate. You can buy a cert from your DNS provider, or create a self-signed one; both have their benefits.
 
 To generate `server.key` and a self-signed `server.crt` valid for 1337 days:
 
@@ -42,13 +40,9 @@ To generate `server.key` and a self-signed `server.crt` valid for 1337 days:
 
 Make sure you enter your server's domain name for *Common Name*.
 
-Add clients to the conf file like this:
+For more info on options, see `sftdyn --help` or `sftdyn/args.py`. All command-line arguments can also be written into the conf file as key/value pairs. The conf file overwrites command-line options.
 
-    clients["mysupersecretupdatekey"]="test.dyn.sft.mx"
-
-For more info on options, see `sftdyn --help` or `sftdyn/args.py`.
-
-sftdyn _should_ run under the same user as your DNS server, or it won't be able to communicate with it.
+sftdyn _should_ run under the same user as your DNS server, or it _might_ not be able to communicate with it.
 
 #### Client
 Just set up a cronjob that talks to sftdyn every few minutes:
