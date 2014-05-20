@@ -6,7 +6,7 @@ p.add_argument("-c", "--cert", type=str,
                help="X.509 cert file")
 p.add_argument("-k", "--key", type=str,
                help="X.509 key file")
-p.add_argument("conffile", type=str, count="?", default="/etc/sftdyn/conf",
+p.add_argument("conffile", type=str, nargs="?", default="/etc/sftdyn/conf",
                help="conf file, will be exec'd as python3")
 p.add_argument("-p", "--port", type=int, default=4443)
 p.add_argument("-l", "--listen", type=str, default="0.0.0.0")
@@ -21,10 +21,10 @@ def parse():
     args = p.parse_args()
     args.clients = {}
 
-    if not os.path.isfile(args.conf):
+    if not os.path.isfile(args.conffile):
         p.error("Not a valid conf file: " + args.conf)
 
-    exec(open(args.conf).read(), args.__dict__)
+    exec(open(args.conffile).read(), args.__dict__)
 
     if not args.cert or not args.key:
         p.error("You must provide key and cert files")
