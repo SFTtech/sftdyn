@@ -13,7 +13,7 @@ p.add_argument("-l", "--listen", type=str, default="0.0.0.0")
 p.add_argument("--conf", type=str,
                help="conf file, will be exec'd as python3")
 p.add_argument("--nsupdatecommand", type=str,
-               default="update del $HOST A\nupdate add $HOST 30 A $IP\nsend\n",
+               default="update delete $HOST A\nupdate add $HOST 30 A $IP\nsend\n",
                help="template command list for nsupdate")
 
 
@@ -21,7 +21,7 @@ def parse():
     args = p.parse_args()
 
     args.clients = [c.split(':', maxsplit=1) for c in args.client]
-    args.clients = {ckey: chost for ckey, chost in args.clients.items()}
+    args.clients = {ckey: chost for ckey, chost in args.clients}
     del args.client
 
     if args.conf:

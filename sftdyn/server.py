@@ -12,11 +12,11 @@ def handle_request(key, ip):
         return ip, 200
 
     try:
-        host = args.clients[ckey]
+        host = args.clients[key]
     except:
         return "BADKEY", 403
 
-    if currentips.get(host, None) is ip:
+    if currentips.get(host, None) == ip:
         return "UPTODATE", 200
 
     print("updating " + host + " to " + ip)
