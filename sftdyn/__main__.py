@@ -1,9 +1,8 @@
-import sftdyn.args
-import sftdyn.server
-
-
 def main():
-    sftdyn.args.__dict__.update(sftdyn.args.parse().__dict__)
+    import sftdyn.args as args
+    import sftdyn.server
+
+    vars(args).update(args.parse())
     try:
         sftdyn.server.serve()
     except KeyboardInterrupt:

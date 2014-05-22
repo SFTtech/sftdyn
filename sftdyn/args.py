@@ -24,9 +24,9 @@ def parse():
     if not os.path.isfile(args.conffile):
         p.error("Not a valid conf file: " + args.conffile)
 
-    exec(open(args.conffile).read(), args.__dict__)
+    exec(open(args.conffile).read(), vars(args))
 
     if not args.cert or not args.key:
         p.error("You must provide key and cert files")
 
-    return args
+    return vars(args)

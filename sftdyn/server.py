@@ -25,7 +25,7 @@ def handle_request(key, ip):
     cmd = args.nsupdatecommand.replace('$HOST', host).replace('$IP', ip)
     p.communicate(input=cmd.encode('utf-8'))
 
-    if p.returncode is 0:
+    if p.returncode == 0:
         currentips[host] = ip
         return "OK", 200
     else:
