@@ -1,6 +1,6 @@
 sftdyn is a minimalistic dynamic DNS server that accepts update requests via HTTP(S) and forwards them to a locally running DNS server via `nsupdate -l`.
 
-It lets you easily create a dyndns.org-like service, using your own DNS server.
+It lets you easily create a dyndns.org-like service, using your own DNS server, and can (probably) be used with your router.
 
 ## Quick Guide
 
@@ -47,7 +47,8 @@ Make sure you enter your server's domain name for _Common Name_.
 sftdyn _should_ run under the same user as your DNS server, or it _might_ not be able to update it properly.
 
 #### Client
-Just set up a cronjob that talks to sftdyn every few minutes:
+To use your router as client, select 'user-defined provider', enter http://dyn.sft.mx:8080/yourupdatekey as update URL, and random stuff as domain name/user name/password. (tested with my AVM Fritz!Box. YMMV).
+To use a linux box as client, just set up a cronjob that talks to sftdyn every few minutes:
 
     */10 * * * * curl https://dyn.sft.mx:4443/mysecretupdatekey
 
@@ -66,9 +67,9 @@ If you use HTTPS with a self-signed certificate, curl will refuse to talk to the
 ## About
 I wrote this script after the free dyndns.org service was shut down. After a week or so of using plain nsupdate, I was annoyed enough to decide to write this.
 
-It is the main goal to stay as minimal as possible; for example, I deliberately didn't implement a way to specify the hostname or IP that you want to update; just a simple secret update key is perfectly good for the intended purpose of this project. If you feel like it, you can make the update key look like a more complex request; every character is allowed. Example: `?host=test.sft.mx&key=90bbd8698198ea76`.
+It is the main goal to stay as minimal as possible; for example, I deliberately didn't implement a way to specify the hostname or IP that you want to update; just a simple secret update key is perfectly good for the intended purpose. If you feel like it, you can make the update key look like a more complex request; every character is allowed. Example: `?host=test.sft.mx&key=90bbd8698198ea76`.
 
-The conf file is executed as python code in the args context, so you can fill it with arbitrarily complex stuff; for example, you could assemble the client list some external information source. You could even make it into some complex class instead of a python dict, and make it dynamically process the update keys. Whatever you want.
+The conf file is interpreted as python code, so you can do arbitrarily complex stuff there. You can also update server.clients at runtime using the interactive console.
 
 ## Security considerations
 
@@ -85,11 +86,11 @@ Somebody who knows a valid udpate key could semi-effectively DOS your server by 
 IMHO, the project is feature-complete; it has everything that **I** currently want.
 
 Features that _might_ be useful, which I _might_ implement if someone asked nicely:
- - Support to run this inside an Apache web server
- - Initscripts for _your distribution here_
+ - Support to run this inside an Apache web server (WSGI?)
+ - Initscripts for _insert your distro here_
  - I'm sure there are more
 
-If you have any requests, ideas, feedback, bug reports, piles of money, are simply filled with pure hatred, or just need help getting the damn thing to run, join `irc.freenode.net/#sfttech` (I'm mic_e).
+If you have any requests, ideas, feedback or bug reports, are simply filled with pure hatred, or just need help getting the damn thing to run, join `irc.freenode.net/#sfttech` (I'm mic_e).
 
 If you actually _did_ implement a useful feature in a sufficiently non-bloaty way, please send a pull request; I'd be happy to merge it.
 

@@ -14,6 +14,7 @@ setup(
     long_description="dyndns.org-like service that accepts update requests " +
                      "via HTTP(S) and forwards them to a locally running " +
                      "DNS server via nsupdate -l.\n" +
+                     "Works with most routers.\n" +
                      "Readme: " +
                      "https://github.com/SFTtech/sftdyn/blob/master/README.md",
     author="Michael Ensslin",
