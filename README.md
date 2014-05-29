@@ -47,7 +47,8 @@ Make sure you enter your server's domain name for _Common Name_.
 sftdyn _should_ run under the same user as your DNS server, or it _might_ not be able to update it properly.
 
 #### Client
-To use your router as client, select 'user-defined provider', enter http://dyn.sft.mx:8080/yourupdatekey as update URL, and random stuff as domain name/user name/password. (tested with my AVM Fritz!Box. YMMV).
+To use your router as client, select _user-defined provider_, enter http://dyn.sft.mx:8080/yourupdatekey as the update URL, and random stuff as domain name/user name/password. (tested with my AVM Fritz!Box. YMMV). Most routers don't support HTTPS update requests, so you'll probably need HTTP.
+
 To use a linux box as client, just set up a cronjob that talks to sftdyn every few minutes:
 
     */10 * * * * curl https://dyn.sft.mx:4443/mysecretupdatekey
