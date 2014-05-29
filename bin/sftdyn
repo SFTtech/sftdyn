@@ -1,2 +1,2 @@
-#!/usr/bin/env python3
-from sftdyn import __main__
+#!/bin/bash
+exec env python3 -m sftdyn "$@"
