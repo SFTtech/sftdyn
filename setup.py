@@ -10,7 +10,7 @@ if version_info[0] < 3:
 setup(
     name="sftdyn",
     version=VERSION,
-    description="HTTPS-based dynamic DNS updater server",
+    description="HTTP(S)-based dynamic DNS updater server",
     long_description="dyndns.org-like service that accepts update requests " +
                      "via HTTP(S) and forwards them to a locally running " +
                      "DNS server via nsupdate -l.\n" +
