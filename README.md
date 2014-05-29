@@ -49,10 +49,10 @@ sftdyn _should_ run under the same user as your DNS server, or it _might_ not be
 #### Client
 Just set up a cronjob that talks to sftdyn every few minutes:
 
-    /10 * * * * curl https://dyn.sft.mx:4443/mysecretupdatekey
+    */10 * * * * curl https://dyn.sft.mx:4443/mysecretupdatekey
 
-If your certificate was self-signed, curl will refuse to talk to the server.
- - Use `curl -k` to ignore the error (Warning: see [security considerations](##security-considerations)).
+If you use HTTPS with a self-signed certificate, curl will refuse to talk to the server.
+ - Use `curl -k` to ignore the error (Warning: see the security considerations below).
  - Copy `server.crt` to the client, and use `curl --cacert server.crt`.
 
 | HTTP code     | Text          | Response interpretation             |
