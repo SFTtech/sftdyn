@@ -89,7 +89,7 @@ class Server(threading.Thread):
         self.httpd = http.server.HTTPServer(addr, GetHandler)
 
         if use_ssl:
-            httpd.socket = ssl.wrap_socket(
+            self.httpd.socket = ssl.wrap_socket(
                 self.httpd.socket,
                 server_side=True,
                 keyfile=use_ssl[0],
