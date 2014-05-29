@@ -1,4 +1,4 @@
-sftdyn is a minimalistic (~ 100 lines) dynamic DNS server that accepts update requests via HTTPs and forwards them to a locally running DNS server via `nsupdate -l`.
+sftdyn is a minimalistic dynamic DNS server that accepts update requests via HTTP(S) and forwards them to a locally running DNS server via `nsupdate -l`.
 
 It lets you easily create a dyndns.org-like service, using your own DNS server.
 
@@ -29,9 +29,11 @@ If you want to use `dyn.sft.mx` as the hostname for your update requests, add a 
 #### sftdyn
 To install *sftdyn*, use `pip install sftdyn` or `./setup.py install`. Launch it with `sftdyn [command-line options]`.
 
-Configuration is by command-line parameters and conf file. A sample conf file is provided in `sample.conf`. If no conf file name is provided, `/etc/sftdyn/conf` is used. The conf file is the only place to specify update keys/hostnames.
+Configuration is by command-line parameters and conf file. A sample conf file is provided in `sample.conf`. If no conf file name is provided, `/etc/sftdyn/conf` is used. hostnames/update keys are specified in the conf file.
 
-sftdyn relies on HTTPs for security, so you **must** provide a X.509 key and certificate. You can buy a cert from your DNS provider, or create a self-signed one; both have their benefits.
+You _can_ use sftdyn in plain HTTP mode. Your average commercial dynamic DNS provider provides a HTTP interface, so most routers only support that.
+
+However, for security reasons, you _should_ use HTTPS. For that, your server needs a X.509 key and certificate. You can buy a cert from your DNS provider, or create a self-signed one; both have their benefits.
 
 To generate `server.key` and a self-signed `server.crt` valid for 1337 days:
 
@@ -40,11 +42,9 @@ To generate `server.key` and a self-signed `server.crt` valid for 1337 days:
     openssl x509 -req -days 1337 -in server.csr -signkey server.key -out server.crt
     rm server.csr
 
-Make sure you enter your server's domain name for *Common Name*.
+Make sure you enter your server's domain name for _Common Name_.
 
-For more info on options, see `sftdyn --help` or `sftdyn/args.py`. All command-line arguments can also be written into the conf file as key/value pairs. The conf file overwrites command-line options.
-
-sftdyn _should_ run under the same user as your DNS server, or it _might_ not be able to communicate with it.
+sftdyn _should_ run under the same user as your DNS server, or it _might_ not be able to update it properly.
 
 #### Client
 Just set up a cronjob that talks to sftdyn every few minutes:
@@ -52,8 +52,8 @@ Just set up a cronjob that talks to sftdyn every few minutes:
     /10 * * * * curl https://dyn.sft.mx:4443/mysecretupdatekey
 
 If your certificate was self-signed, curl will refuse to talk to the server.
- - Use `curl -k` to ignore the error; That way MITM attackers could steal your update key.
- - Copy `server.crt` to the client, and use `curl --cacert server.crt`. This is even more secure than using a paid certificate.
+ - Use `curl -k` to ignore the error (Warning: see [security considerations](##security-considerations)).
+ - Copy `server.crt` to the client, and use `curl --cacert server.crt`.
 
 | HTTP code     | Text          | Response interpretation             |
 | ------------- | ------------- | ----------------------------------- |
@@ -72,11 +72,10 @@ The conf file is executed as python code in the args context, so you can fill it
 
 ## Security considerations
 
-- When using plain HTTP, anybody who listens can steal your update key. Plain HTTP is currently not implemented for this reason.
-- When using `curl -k`, a man-in-the-middle attacker can steal your update key.
-- When using a paid certificate, a man-in-the-middle attacker needs access to a CA (no problem for gouvernment agencies, but this is pretty unlikely to happen).
-- When using a self-signed certificate and `curl --cacert server.crt`, a man-in-the-middle attacker needs to steal your server.key.
-- A man-in-the middle attacker who knows your server.key can always steal your update key. The same goes for security vulnerabilities in OpenSSL.
+- When using HTTP, or if your `server.key` has been stolen or broken, an eavesdropper can steal your update key, and use that to steal your domain name.
+- When using HTTPS with `curl -k`, a man-in-the-middle can steal your update key.
+- When using HTTPS with a paid certificate, a man-in-the-middle with access to a CA can steal your update key (no problem for government agencies, but this is pretty unlikely to happen).
+- When using HTTPS with a self-signed certificate and `curl --cacert server.crt`, no man-in-the-middle can steal your update key.
 
 sftdyn is pretty minimalistic, and written in python, so it's unlikely to contain any security vulnerabilities. The python ssl and http modules are used widely, and open-source, so there _should_ be no security vulnerabilities there.
 
@@ -86,8 +85,6 @@ Somebody who knows a valid udpate key could semi-effectively DOS your server by 
 IMHO, the project is feature-complete; it has everything that **I** currently want.
 
 Features that _might_ be useful, which I _might_ implement if someone asked nicely:
- - A plain HTTP version for our less ~~paranoid~~ security-aware fellows
- - A version that is supported by common router's dynamic DNS feature
  - Support to run this inside an Apache web server
  - Initscripts for _your distribution here_
  - I'm sure there are more
@@ -96,4 +93,4 @@ If you have any requests, ideas, feedback, bug reports, piles of money, are simp
 
 If you actually _did_ implement a useful feature in a sufficiently non-bloaty way, please send a pull request; I'd be happy to merge it.
 
-The license is `GNU GPLv3+`.
+The license is GNU GPLv3 or higher.
