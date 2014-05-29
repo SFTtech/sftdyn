@@ -19,14 +19,17 @@ def handle_request(key, ip):
     """
 
     if not key:
+        print("ret")
         return ip, 200
 
     try:
         host = clients[key]
     except:
+        print("ret")
         return "BADKEY", 403
 
     if currentips.get(host, None) == ip:
+        print("ret")
         return "UPTODATE", 200
 
     print("updating " + host + " to " + ip)
@@ -37,8 +40,10 @@ def handle_request(key, ip):
 
     if p.returncode == 0:
         currentips[host] = ip
+        print("ret")
         return "OK", 200
     else:
+        print("ret")
         return "FAIL", 500
 
 
@@ -48,14 +53,20 @@ class GetHandler(BaseHTTPRequestHandler):
     """
 
     def do_GET(self):
+        print("do_get")
         path = self.path.lstrip('/')
 
         # wheee thread-safety
+        print("acquiring lock")
         with lock:
+            print("lock aquired")
             text, code = handle_request(path, self.client_address[0])
+            print("request handled")
+        print("lock released")
         self.send_response(code)
         self.end_headers()
         self.wfile.write(text.encode('utf-8'))
+        print("done")
 
 
 class Server(threading.Thread):
@@ -80,9 +91,8 @@ class Server(threading.Thread):
         # hundreds of man-years have been wasted on simply making threaded
         # programs shutdown 'cleanly', while fractions of seconds later
         # the kernel would have cleaned up their remains anyway.
-        # in our case, the only possible ressources are the socket, and
-        # a nsupdate subprocess, which in turn also only has a socket open.
-        # the kernel will do a perfect job at cleaning this up.
+        # in our case, because program termination requires the lock,
+        # the only ressource held by the thread is its socket.
         # if you _really_ want to waste time on this, go for it; I'll pull it.
         self.daemon = True
 

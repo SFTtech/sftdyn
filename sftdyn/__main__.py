@@ -21,3 +21,7 @@ if args.https:
     httpsserver.start()
 
 interactivesession.interact(server.lock, globals(), "sftdyn " + sftdyn.VERSION)
+
+#terminate semi-cleanly (wait until no server is serving a client)
+with server.lock:
+    exit(0)
