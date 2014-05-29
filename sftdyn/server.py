@@ -57,7 +57,6 @@ class GetHandler(BaseHTTPRequestHandler):
         self.send_response(code)
         self.end_headers()
         self.wfile.write(text.encode('utf-8'))
-        print("done")
 
 
 class Server(threading.Thread):
