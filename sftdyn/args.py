@@ -23,6 +23,9 @@ def stringtoipport(s):
     returns
         (ip, port) where ip is a string and port is an int
     """
+    if type(s) == int:
+        return "0.0.0.0", s
+
     if not s.count(':'):
         return "0.0.0.0", int(s)
     else:
@@ -36,7 +39,6 @@ def parse():
     parses the args, and returns the namespace.
     """
     args = p.parse_args()
-    args.clients = {}
 
     # read the conffile
     if not os.path.isfile(args.conffile):
