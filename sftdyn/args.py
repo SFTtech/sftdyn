@@ -8,6 +8,8 @@ p.add_argument("-l", "--http", metavar="IP:PORT", help="Enable HTTP server")
 p.add_argument("-s", "--https", metavar="IP:PORT", help="Enable HTTPS server")
 p.add_argument("-c", "--cert", type=str, help="HTTPS X.509 cert file")
 p.add_argument("-k", "--key", type=str, help="HTTPS X.509 key file")
+p.add_argument("-n", "--non-interactive", help="Run in non-interactive mode",
+    action="store_true")
 p.add_argument("--nsupdatecommand", type=str,
                default="update delete <host> A\n" +
                        "update add <host> 30 A <ip>\n" +
