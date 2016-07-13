@@ -52,7 +52,10 @@ class GetHandler(BaseHTTPRequestHandler):
 
         # wheee, thread-safety!
         with lock:
-            text, code = handle_request(path, self.client_address[0])
+            addr = self.client_address[0]
+            if 'X-Real-IP' in self.headers:
+                addr = self.headers['X-Real-IP']
+            text, code = handle_request(path, addr)
 
         self.send_response(code)
         self.end_headers()
