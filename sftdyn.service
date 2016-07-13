@@ -1,0 +1,13 @@
+[Unit]
+Description=sftdyn dynamic dns service
+After=network.target
+
+[Service]
+Type=simple
+ExecStart=/usr/local/bin/sftdyn -n
+ExecStop=
+User=bind
+Group=bind
+
+[Install]
+WantedBy=multi-user.target
