@@ -1,103 +1,107 @@
-import http
 import ssl
-import threading
-from http.server import BaseHTTPRequestHandler
-from subprocess import Popen, PIPE
+import asyncio
 
-currentips = {}
-lock = threading.Lock()
+from logging import info
+from aiohttp import web
 
 
-def handle_request(key, ip):
+class Server:
     """
-    the actual application-specific code
-
-    key
-        the path part of the client request URL, without the leading '/'
-    ip
-        the IP address of the client
+    HTTP(S) server for DNS record update requests.
     """
 
-    if not key:
-        return ip, 200
-
-    try:
-        host = clients[key]
-    except:
-        return "BADKEY", 403
-
-    if currentips.get(host, None) == ip:
-        return "UPTODATE", 200
-
-    print("updating " + host + " to " + ip)
-
-    p = Popen(['nsupdate', '-l'], stdin=PIPE)
-    cmd = nsupdatecommand.replace('<host>', host).replace('<ip>', ip)
-    p.communicate(input=cmd.encode('utf-8'))
-
-    if p.returncode == 0:
-        currentips[host] = ip
-        return "OK", 200
-    else:
-        return "FAIL", 500
-
-
-class GetHandler(BaseHTTPRequestHandler):
-    """
-    used by all Server objects to handle GET requests
-    """
-
-    def do_GET(self):
-        path = self.path.lstrip('/')
-
-        # wheee, thread-safety!
-        with lock:
-            addr = self.client_address[0]
-            if 'X-Real-IP' in self.headers:
-                addr = self.headers['X-Real-IP']
-            text, code = handle_request(path, addr)
-
-        self.send_response(code)
-        self.end_headers()
-        self.wfile.write(text.encode('utf-8'))
-
-
-class Server(threading.Thread):
-    """
-    single HTTP(S) server class
-
-    use start() to run in a thread.
-    """
-
-    def __init__(self, addr, use_ssl=None):
+    def __init__(self, addr, clients, associations, nsupdatecommand, tls=None):
         """
-        opens the socket and creates the HTTPServer.
-
-        addr
-            (ip, port) listening address
-        ssl
-            if not None, must be a (key, cert) tuple
+        addr: (ip, port) to listen on
+        clients: {dnsclient: dnshostname} map of allowed clients
+        associations: {dnshostname: ipaddr} map to cache current dynamic ips
+        nsupdatecommand: command sent to the `nsupdate` stdin,
+                         `<host>` and `<ip>` are replaced
+        tls: (cerfilename, keyfilename) to use for the tls socket
         """
-        super().__init__()
 
-        # clean thread termination would seriously not be worth the effort.
-        # hundreds of man-years have been wasted on simply making threaded
-        # programs shutdown 'cleanly', while fractions of seconds later
-        # the kernel would have cleaned up their remains anyway.
-        # in our case, because program termination requires the lock,
-        # the only ressource held by the thread is its socket.
-        # if you _really_ want to waste time on this, go for it; I'll pull it.
-        self.daemon = True
+        self.addr = addr
+        self.clients = clients
+        self.associations = associations
+        self.nsupdatecommand = nsupdatecommand
 
-        self.httpd = http.server.HTTPServer(addr, GetHandler)
+        if tls:
+            self.sslcontext = ssl.SSLContext()
+            self.sslcontext.load_cert_chain(tls[0], tls[1])
+        else:
+            self.sslcontext = None
 
-        if use_ssl:
-            self.httpd.socket = ssl.wrap_socket(
-                self.httpd.socket,
-                server_side=True,
-                keyfile=use_ssl[0],
-                certfile=use_ssl[1],
-                ssl_version=ssl.PROTOCOL_TLSv1)
+    async def listen(self, loop):
+        """
+        Let the server listen on the given event loop.
+        """
 
-    def run(self):
-        self.httpd.serve_forever()
+        server = web.Server(self.handler)
+        await loop.create_server(
+            server,
+            self.addr[0],
+            self.addr[1],
+            ssl=self.sslcontext
+        )
+
+    async def handler(self, request):
+        """
+        Handler for a single request.
+        """
+
+        if request.method != "GET":
+            return web.Response(status=405)
+
+        path = request.path_qs.lstrip('/')
+        peername = request.transport.get_extra_info('peername')
+        if peername is None:
+            return web.Response(status=500)
+
+        addr, _ = peername
+        if 'X-Real-IP' in request.headers:
+            addr = request.headers['X-Real-IP']
+        text, code = await self.handle_request(path, addr)
+
+        return web.Response(text=text, status=code)
+
+    async def handle_request(self, key, ip):
+        """
+        the actual application-specific code
+
+        key
+            the path part of the client request URL, without the leading '/'
+        ip
+            the IP address of the client
+
+        returns
+            (status, httpcode) after examining the key
+        """
+
+        if not key:
+            return ip, 200
+
+        try:
+            host = self.clients[key]
+        except KeyError:
+            return "BADKEY", 403
+
+        if self.associations.get(host, None) == ip:
+            return "UPTODATE", 200
+
+        info("updating %s to %s" % (host, ip))
+
+        cmd = self.nsupdatecommand.replace('<host>', host).replace('<ip>', ip)
+
+        proc = await asyncio.create_subprocess_exec(
+            'nsupdate', '-l',
+            stdin=asyncio.subprocess.PIPE
+        )
+        proc.stdin.write(cmd.encode())
+        proc.stdin.close()
+        await proc.wait()
+
+        if proc.returncode == 0:
+            self.associations[host] = ip
+            return "OK", 200
+        else:
+            return "FAIL", 500

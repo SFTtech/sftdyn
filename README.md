@@ -1,59 +1,137 @@
-sftdyn is a minimalistic dynamic DNS server that accepts update requests via HTTP(S) and forwards them to a locally running DNS server via `nsupdate -l`.
+# sftdyn dynamic dns server
+
+`sftdyn` is a minimalistic dynamic DNS server that accepts update requests via HTTP(S) and forwards them to a locally running DNS server via `nsupdate -l`.
 
 It lets you easily create a dyndns.org-like service, using your own DNS server, and can (probably) be used with your router.
 
+## Operation
+
+* Some device submits a https request to a "secret URL" of `sftdyn`
+* From this, `sftdyn` knows the request origin IP
+* From the "secret URL", `sftdyn` updates the DNS record of the associated hostname
+* The request therfore updated an IP in your zone
+
+
+## Requirements
+
+* [Python >=3.4](https://www.python.org/)
+* [`aiohttp`](https://aiohttp.readthedocs.io/)
+
+
 ## Quick Guide
 
-This guide assumes that you're using bind, your zone is dyn.sft.mx, and your server's IP is 12.345.678.901. You'll want to adjust that.
+`sftdyn` is for you if you host a DNS zone and can run a Python server so it updates the nameserver records.
+This guide assumes that you're using bind, your zone is `dyn.sft.mx`, and your server's IP is `12.345.678.901`.
+It's mediocre likely that you want to adjust that.
 
-#### Nameserver
+
+### Nameserver
+
+`bind` has to be configured to serve the updatable zone.
+
 Somewhere in `named.conf`, add
 
-    zone "dyn.sft.mx" IN {
-        type master;
-        file "/etc/bind/dyn.sft.mx.zone";
-        journal "/var/cache/bind/dyn.sft.mx.zone.jnl";
-        update-policy local;
-    };
+```
+zone "dyn.sft.mx" IN {
+    type master;
+    file "/etc/bind/dyn.sft.mx.zone";
+    journal "/var/cache/bind/dyn.sft.mx.zone.jnl";
+    update-policy local;
+};
+```
 
 `/var/cache/bind` must be writable for *bind*.
 
 Create the empty zone file
 
-    cp /etc/bind/db.empty /etc/bind/dyn.sft.mx.zone
+```
+cp /etc/bind/db.empty /etc/bind/dyn.sft.mx.zone
+```
 
 If you want to use `dyn.sft.mx` as the hostname for your update requests, add a record to the zone file:
 
-    IN A 12.345.678.901
+```
+@ IN A 12.345.678.901
+@ IN AAAA some:ipv6::address
+```
 
-#### sftdyn
-To install *sftdyn*, use `pip install sftdyn` or `./setup.py install`. Launch it with `sftdyn [command-line options]`.
 
-Configuration is by command-line parameters and conf file. A sample conf file is provided in `sample.conf`. If no conf file name is provided, `/etc/sftdyn/conf` is used. hostnames/update keys are specified in the conf file.
+### sftdyn
 
-You _can_ use sftdyn in plain HTTP mode. Your average commercial dynamic DNS provider provides a HTTP interface, so most routers only support that.
+To install *sftdyn*, use `pip install sftdyn` or `./setup.py install`.
 
-However, for security reasons, you _should_ use HTTPS. For that, your server needs a X.509 key and certificate. You can buy a cert from your DNS provider, or create a self-signed one; both have their benefits.
+Launch it with `python3 -m sftdyn [command-line options]`.
 
+Configuration is by command-line parameters and conf file.
+A sample conf file is provided in `sample.conf`.
+If no conf file name is provided, `/etc/sftdyn/conf` is used.
+Hostnames/update keys are specified in the conf file.
+
+#### systemd service
+
+To run `sftdyn` automatically, you can use a systemd service.
+
+Create `/etc/systemd/system/sftdyn.service` on the `sftdyn` host machine:
+
+```
+[Unit]
+Description=SFT dyndns service
+After=network.target
+
+[Service]
+User=bind
+ExecStart=/usr/bin/env python3 -m sftdyn
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target
+```
+
+Enable the launch on boot and also start `sftdyn` now:
+
+```
+sudo systemctl enable --now sftdyn.service
+```
+
+#### Unencrypted operation
+You _can_ use `sftdyn` in plain HTTP mode.
+Your average commercial dynamic DNS provider provides a HTTP interface, so most routers only support that.
+
+Somebody could grab your "secret url" with this and perform unintended updates of your record.
+
+
+#### Encrypted operation
+Because of the above reason, you _should_ use HTTPS to keep your update url token secret.
+For that, your server needs a X.509 key and certificate.
+You can create those with [let's encrypt](https://letsencrypt.org/), buy those somewhere, or create a self-signed one.
+
+##### Self-signed certificate
 To generate `server.key` and a self-signed `server.crt` valid for 1337 days:
 
-    openssl genrsa -out server.key.org 4096
-    openssl req -new -key server.key -out server.csr
-    openssl x509 -req -days 1337 -in server.csr -signkey server.key -out server.crt
-    rm server.csr
+```
+openssl genrsa -out server.key 4096
+openssl req -new -key server.key -out server.csr
+openssl x509 -req -days 1337 -in server.csr -signkey server.key -out server.crt
+rm server.csr
+```
 
 Make sure you enter your server's domain name for _Common Name_.
 
-sftdyn _should_ run under the same user as your DNS server, or it _might_ not be able to update it properly.
+`sftdyn` _should_ run under the same user as your DNS server, or it _might_ not be able to update it properly.
 
-#### Client
-To use your router as client, select _user-defined provider_, enter http://dyn.sft.mx:8080/yourupdatekey as the update URL, and random stuff as domain name/user name/password. (tested with my AVM Fritz!Box. YMMV). Most routers don't support HTTPS update requests, so you'll probably need HTTP.
 
-To use your GNU+Linux box as client, just set up a cronjob that talks to sftdyn every few minutes:
+### Client
 
-    */10 * * * * curl https://dyn.sft.mx:4443/mysecretupdatekey
+The client triggers the IP update at the `sftdyn` server, so your DNS then delivers the correct IP.
 
-If you use HTTPS with a self-signed certificate, curl will refuse to talk to the server.
+#### Plastic router
+To use your router as client, select _user-defined provider_, enter http://dyn.sft.mx:8080/yourupdatekey as the update URL, and random stuff as domain name/user name/password. (tested with my AVM Fritz!Box. YMMV). Most routers don't support HTTPS update requests (especially not with custom CA-cert, so you'll probably need HTTP.
+
+#### Request with `curl`
+
+If you want to update the external IP of some network, and a machine in that network can use `curl`, choose this client method.
+
+If you use HTTPS with a self-signed certificate, `curl` will refuse to talk to the server.
  - Use `curl -k` to ignore the error (Warning: see the security considerations below).
  - Copy `server.crt` to the client, and use `curl --cacert server.crt`.
 
@@ -65,12 +143,68 @@ If you use HTTPS with a self-signed certificate, curl will refuse to talk to the
 | 500           | FAIL          | Internal error (see the server log) |
 | 200           | _your ip_     | Returned if no key is provided      |
 
+##### systemd timer
+`systemd` timers are like cronjobs. Use them to periodically run the update query.
+
+Create `/etc/systemd/system/sftdynupdate.timer`:
+```
+[Unit]
+Description=SFTdyn dns updater
+
+[Timer]
+OnCalendar=*:0/15
+Persistent=true
+
+[Install]
+WantedBy=timers.target
+```
+
+Create `/etc/systemd/system/sftdynupdate.service`:
+```
+[Unit]
+Description=SFTdyn name update
+
+[Service]
+Type=oneshot
+User=nobody
+ExecStart=/usr/bin/env curl -f -s --cacert /path/to/server.crt https://dyn.sft.mx:4443/yoursecretupdatekey
+```
+
+Activate the timer firing with:
+
+```
+sudo systemctl enable --now sftdyn.timer
+```
+
+Verify the timer is scheduled:
+
+```
+sudo systemctl list-timers
+```
+
+To manually trigger the update (e.g. for testing purposes):
+
+```
+sudo systemctl start sftdyn.service
+```
+
+##### Cronjob
+
+Cronjobs are the legacy variant to periodically run a task, you could do this like this:
+
+```
+*/10 * * * * curl https://dyn.sft.mx:4443/mysecretupdatekey
+```
+
+
 ## About
-I wrote this script after the free dyndns.org service was shut down. After a week or so of using plain nsupdate, I was annoyed enough to decide to write this.
+
+I wrote this script after the free `dyndns.org` service was shut down.
+After a week or so of using plain `nsupdate`, I was annoyed enough to decide to write this.
 
 It is the main goal to stay as minimal as possible; for example, I deliberately didn't implement a way to specify the hostname or IP that you want to update; just a simple secret update key is perfectly good for the intended purpose. If you feel like it, you can make the update key look like a more complex request; every character is allowed. Example: `?host=test.sft.mx&key=90bbd8698198ea76`.
 
-The conf file is interpreted as python code, so you can do arbitrarily complex stuff there. You can also update server.clients at runtime using the interactive console.
+The conf file is interpreted as python code, so you can do arbitrarily complex stuff there.
 
 ## Security considerations
 
@@ -79,7 +213,7 @@ The conf file is interpreted as python code, so you can do arbitrarily complex s
 - When using HTTPS with a paid certificate, a man-in-the-middle with access to a CA can steal your update key (no problem for government agencies, but this is pretty unlikely to happen).
 - When using HTTPS with a self-signed certificate and `curl --cacert server.crt`, no man-in-the-middle can steal your update key.
 
-sftdyn is pretty minimalistic, and written in python, so it's unlikely to contain any security vulnerabilities. The python ssl and http modules are used widely, and open-source, so there _should_ be no security vulnerabilities there.
+`sftdyn` is pretty minimalistic, and written in python, so it's unlikely to contain any security vulnerabilities. The python ssl and http modules are used widely, and open-source, so there _should_ be no security vulnerabilities there.
 
 Somebody who knows a valid udpate key could semi-effectively DOS your server by spamming update requests from two different IPs. For each request, nsupdate would be launched and your zone file updated.
 
@@ -87,12 +221,11 @@ Somebody who knows a valid udpate key could semi-effectively DOS your server by 
 IMHO, the project is feature-complete; it has everything that **I** currently want.
 
 Features that _might_ be useful, which I _might_ implement if someone asked nicely:
- - Support to run this inside an Apache web server (WSGI?)
- - Initscripts for _insert your distro here_
+ - Support to run this inside a "real" webserver like nginx or Apache (WSGI?)
  - I'm sure there are more
 
 If you have any requests, ideas, feedback or bug reports, are simply filled with pure hatred, or just need help getting the damn thing to run, join `irc.freenode.net/#sfttech` (I'm mic_e).
 
-If you actually _did_ implement a useful feature in a sufficiently non-bloaty way, please send a pull request; I'd be happy to merge it.
+If you actually _did_ implement a useful feature, please send a pull request; I'd be happy to merge it.
 
 The license is GNU GPLv3 or higher.

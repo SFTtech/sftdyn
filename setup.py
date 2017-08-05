@@ -20,7 +20,7 @@ setup(
     author="Michael Ensslin",
     author_email="michael@ensslin.cc",
     url="https://github.com/SFTtech/sftdyn",
-    license="GPLv3 or higher",
+    license="GPL3+",
     packages=["sftdyn"],
     scripts=["bin/sftdyn"],
     data_files=[("/etc/sftdyn/", ["sample.conf"])]
