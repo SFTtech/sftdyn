@@ -23,5 +23,19 @@ setup(
     license="GPL3+",
     packages=["sftdyn"],
     scripts=["bin/sftdyn"],
-    data_files=[("/etc/sftdyn/", ["sample.conf"])]
+    data_files=[
+        ("/etc/sftdyn/", ["etc/sample.conf"]),
+        ("/usr/lib/systemd/system/", ["etc/sftdyn.service"]),
+    ],
+    platforms=[
+        'Linux',
+    ],
+    classifiers=[
+        ("License :: OSI Approved :: "
+         "GNU General Public License v3 or later (GPLv3+)"),
+        "Topic :: Internet :: WWW/HTTP",
+        "Intended Audience :: Developers",
+        "Environment :: Console",
+        "Operating System :: POSIX :: Linux"
+    ],
 )

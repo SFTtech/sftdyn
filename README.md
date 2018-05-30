@@ -21,7 +21,7 @@ It lets you easily create a dyndns.org-like service, using your own DNS server, 
 ## Quick Guide
 
 `sftdyn` is for you if you host a DNS zone and can run a Python server so it updates the nameserver records.
-This guide assumes that you're using bind, your zone is `dyn.sft.mx`, and your server's IP is `12.345.678.901`.
+This guide assumes that you're using bind, your zone is `dyn.sft.mx`, and your server's IP is `12.345.678.90`.
 It's mediocre likely that you want to adjust that.
 
 
@@ -51,7 +51,7 @@ cp /etc/bind/db.empty /etc/bind/dyn.sft.mx.zone
 If you want to use `dyn.sft.mx` as the hostname for your update requests, add a record to the zone file:
 
 ```
-@ IN A 12.345.678.901
+@ IN A 12.345.678.90
 @ IN AAAA some:ipv6::address
 ```
 
@@ -63,7 +63,7 @@ To install *sftdyn*, use `pip install sftdyn` or `./setup.py install`.
 Launch it with `python3 -m sftdyn [command-line options]`.
 
 Configuration is by command-line parameters and conf file.
-A sample conf file is provided in `sample.conf`.
+A sample conf file is provided in `etc/sample.conf`.
 If no conf file name is provided, `/etc/sftdyn/conf` is used.
 Hostnames/update keys are specified in the conf file.
 
@@ -71,21 +71,10 @@ Hostnames/update keys are specified in the conf file.
 
 To run `sftdyn` automatically, you can use a systemd service.
 
-Create `/etc/systemd/system/sftdyn.service` on the `sftdyn` host machine:
+The `sftdyn` distribution package should automatically install `sftdyn.service`.
 
-```
-[Unit]
-Description=SFT dyndns service
-After=network.target
-
-[Service]
-User=bind
-ExecStart=/usr/bin/env python3 -m sftdyn
-Restart=on-failure
-
-[Install]
-WantedBy=multi-user.target
-```
+If you have to manually install it, use the example unit `etc/sftdyn.service`
+and copy it to `/etc/systemd/system/sftdyn.service` on the `sftdyn` host machine.
 
 Enable the launch on boot and also start `sftdyn` now:
 
@@ -94,6 +83,7 @@ sudo systemctl enable --now sftdyn.service
 ```
 
 #### Unencrypted operation
+
 You _can_ use `sftdyn` in plain HTTP mode.
 Your average commercial dynamic DNS provider provides a HTTP interface, so most routers only support that.
 
@@ -101,11 +91,13 @@ Somebody could grab your "secret url" with this and perform unintended updates o
 
 
 #### Encrypted operation
+
 Because of the above reason, you _should_ use HTTPS to keep your update url token secret.
 For that, your server needs a X.509 key and certificate.
 You can create those with [let's encrypt](https://letsencrypt.org/), buy those somewhere, or create a self-signed one.
 
 ##### Self-signed certificate
+
 To generate `server.key` and a self-signed `server.crt` valid for 1337 days:
 
 ```
@@ -125,6 +117,7 @@ Make sure you enter your server's domain name for _Common Name_.
 The client triggers the IP update at the `sftdyn` server, so your DNS then delivers the correct IP.
 
 #### Plastic router
+
 To use your router as client, select _user-defined provider_, enter http://dyn.sft.mx:8080/yourupdatekey as the update URL, and random stuff as domain name/user name/password. (tested with my AVM Fritz!Box. YMMV). Most routers don't support HTTPS update requests (especially not with custom CA-cert, so you'll probably need HTTP.
 
 #### Request with `curl`
@@ -144,6 +137,7 @@ If you use HTTPS with a self-signed certificate, `curl` will refuse to talk to t
 | 200           | _your ip_     | Returned if no key is provided      |
 
 ##### systemd timer
+
 `systemd` timers are like cronjobs. Use them to periodically run the update query.
 
 Create `/etc/systemd/system/sftdynupdate.timer`:
@@ -199,7 +193,7 @@ Cronjobs are the legacy variant to periodically run a task, you could do this li
 
 ## About
 
-I wrote this script after the free `dyndns.org` service was shut down.
+This software was written after the free `dyndns.org` service was shut down.
 After a week or so of using plain `nsupdate`, I was annoyed enough to decide to write this.
 
 It is the main goal to stay as minimal as possible; for example, I deliberately didn't implement a way to specify the hostname or IP that you want to update; just a simple secret update key is perfectly good for the intended purpose. If you feel like it, you can make the update key look like a more complex request; every character is allowed. Example: `?host=test.sft.mx&key=90bbd8698198ea76`.
@@ -218,13 +212,17 @@ The conf file is interpreted as python code, so you can do arbitrarily complex s
 Somebody who knows a valid udpate key could semi-effectively DOS your server by spamming update requests from two different IPs. For each request, nsupdate would be launched and your zone file updated.
 
 ## Development
-IMHO, the project is feature-complete; it has everything that **I** currently want.
 
-Features that _might_ be useful, which I _might_ implement if someone asked nicely:
- - Support to run this inside a "real" webserver like nginx or Apache (WSGI?)
- - I'm sure there are more
+IMHO, the project is feature-complete; it has everything that **I** currently need.
 
-If you have any requests, ideas, feedback or bug reports, are simply filled with pure hatred, or just need help getting the damn thing to run, join `irc.freenode.net/#sfttech` (I'm mic_e).
+If you have any requests, ideas, feedback or bug reports,
+are simply filled with pure hatred,
+or just need help getting the damn thing to run,
+join our chatroom and just ask:
+
+- IRC: `irc.freenode.net/#sfttech`
+- Matrix: `#SFTtech:matrix.org`
+
 
 If you actually _did_ implement a useful feature, please send a pull request; I'd be happy to merge it.
 

@@ -1,0 +1,11 @@
+[Unit]
+Description=sft dynamic dns service
+After=network.target
+
+[Service]
+User=named
+ExecStart=/usr/bin/env python3 -m sftdyn -v
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target

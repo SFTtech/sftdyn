@@ -3,7 +3,7 @@ sftdyn is a simple dynamic dns server for http requests
 which then update dns records with nsupdate.
 """
 
-VERSION = "0.5"
+VERSION = "0.6"
 
 
 import asyncio
