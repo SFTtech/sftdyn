@@ -14,7 +14,7 @@ It lets you easily create a dyndns.org-like service, using your own DNS server, 
 
 ## Requirements
 
-* [Python >=3.4](https://www.python.org/)
+* [Python >=3.5](https://www.python.org/)
 * [`aiohttp`](https://aiohttp.readthedocs.io/)
 
 
