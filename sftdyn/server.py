@@ -26,7 +26,10 @@ class Server:
         self.nsupdatecommand = nsupdatecommand
 
         if tls:
-            self.sslcontext = ssl.SSLContext()
+            # create SSLContext for our TLS server
+            self.sslcontext = ssl.create_default_context(
+                purpose=ssl.Purpose.CLIENT_AUTH
+            )
             self.sslcontext.load_cert_chain(tls[0], tls[1])
         else:
             self.sslcontext = None
