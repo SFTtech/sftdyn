@@ -3,19 +3,23 @@ sftdyn is a simple dynamic dns server for http requests
 which then update dns records with nsupdate.
 """
 
-VERSION = "0.7"
-
-
 import asyncio
 from logging import info
 
 
+from . import server
 from .args import parse_args
 from .util import log_setup
-from .server import Server
+
+
+VERSION = "0.8"
 
 
 def main():
+    """
+    launch sftdyn.
+    """
+
     args = parse_args(__doc__)
 
     log_setup(args.verbose - args.quiet)
@@ -31,7 +35,7 @@ def main():
         http_server = server.Server(args.http,
                                     args.clients,
                                     associations,
-                                    args.nsupdatecommand)
+                                    args.nsupdatecommands)
         info("starting http server at %s:%d" % args.http)
         loop.run_until_complete(http_server.listen(loop))
 
@@ -39,7 +43,7 @@ def main():
         https_server = server.Server(args.https,
                                      args.clients,
                                      associations,
-                                     args.nsupdatecommand,
+                                     args.nsupdatecommands,
                                      tls=(args.cert, args.key))
         info("starting https server at %s:%d" % args.https)
         loop.run_until_complete(https_server.listen(loop))

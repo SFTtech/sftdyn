@@ -1,3 +1,8 @@
+"""
+http(s) server implementation for sftdyn.
+"""
+
+
 import ssl
 import asyncio
 
@@ -10,20 +15,20 @@ class Server:
     HTTP(S) server for DNS record update requests.
     """
 
-    def __init__(self, addr, clients, associations, nsupdatecommand, tls=None):
+    def __init__(self, addr, clients, associations, nsupdatecommands, tls=None):
         """
         addr: (ip, port) to listen on
         clients: {dnsclient: dnshostname} map of allowed clients
         associations: {dnshostname: ipaddr} map to cache current dynamic ips
-        nsupdatecommand: command sent to the `nsupdate` stdin,
-                         `<host>` and `<ip>` are replaced
+        nsupdatecommands: function to generate the `nsupdate` stdin,
+                          will be called with `host` and `new_ip` args.
         tls: (cerfilename, keyfilename) to use for the tls socket
         """
 
         self.addr = addr
         self.clients = clients
         self.associations = associations
-        self.nsupdatecommand = nsupdatecommand
+        self.nsupdatecommands = nsupdatecommands
 
         if tls:
             # create SSLContext for our TLS server
@@ -60,14 +65,12 @@ class Server:
         if peername is None:
             return web.Response(status=500)
 
-        addr, _ = peername
-        if 'X-Real-IP' in request.headers:
-            addr = request.headers['X-Real-IP']
-        text, code = await self.handle_request(path, addr)
+        addr = peername[0]
+        text, code = await self.handle_request(path, addr, request.headers)
 
         return web.Response(text=text, status=code)
 
-    async def handle_request(self, key, ip):
+    async def handle_request(self, key, ip, headers=None):
         """
         the actual application-specific code
 
@@ -91,9 +94,16 @@ class Server:
         if self.associations.get(host, None) == ip:
             return "UPTODATE", 200
 
-        info("updating %s to %s" % (host, ip))
+        info("update request for %s => %s" % (host, ip))
 
-        cmd = self.nsupdatecommand.replace('<host>', host).replace('<ip>', ip)
+        if not headers:
+            headers = dict()
+
+        # call to user-defined function
+        cmdlist = self.nsupdatecommands(host, ip, headers)
+
+        iter(cmdlist)  # check if the generated updatecommand is iterable
+        cmd = "\n".join(cmdlist) + "\n"
 
         proc = await asyncio.create_subprocess_exec(
             'nsupdate', '-l',
@@ -106,5 +116,5 @@ class Server:
         if proc.returncode == 0:
             self.associations[host] = ip
             return "OK", 200
-        else:
-            return "FAIL", 500
+
+        return "FAIL", 500

@@ -6,6 +6,7 @@ import argparse
 import ipaddress
 import os
 from pathlib import Path
+from urllib.parse import urlparse
 
 
 def get_parser(intro):
@@ -25,11 +26,6 @@ def get_parser(intro):
     cmd.add_argument("-k", "--key", type=str, help="HTTPS X.509 key file")
     cmd.add_argument("-i", "--interactive", action="store_true",
                      help="launch a interactive session")
-    cmd.add_argument("--nsupdatecommand", type=str,
-                     default=("update delete <host> A\n"
-                              "update add <host> 30 A <ip>\n"
-                              "send\n"),
-                     help="template command list for nsupdate")
 
     cmd.add_argument("-d", "--debug", action="store_true",
                      help="enable asyncio debugging")
@@ -46,19 +42,24 @@ def stringtoipport(txt):
     splits an IP:PORT string, as expected for --http and --https
 
     txt
-        input string, either PORT or I.P.AD.DR:PORT
+        input string, either PORT or an IP4/6-address:port
     returns
         (ip, port) where ip is a string and port is an int
     """
-    if type(txt) == int:
-        return "0.0.0.0", txt
 
-    if not txt.count(':'):
-        return "0.0.0.0", int(txt)
-    else:
-        ipraw, port = txt.split(':')
-        ip = ipaddress.ip_address(ipraw)
-        return str(ip), int(port)
+    defaultip = "::"
+
+    if isinstance(txt, int):
+        return defaultip, txt
+
+    elif txt.isnumeric():
+        return defaultip, int(txt)
+
+    parsed = urlparse('//{}'.format(txt))
+    ip = ipaddress.ip_address(parsed.hostname)
+    port = parsed.port
+
+    return str(ip), int(port)
 
 
 def parse_args(intro):
@@ -76,10 +77,16 @@ def parse_args(intro):
         cmd.error("Not a valid conf file: " + args.conffile)
 
     # execute the file so globals defined in it are added to args
-    exec(open(args.conffile).read(), vars(args))
+    confdefs = dict()
+    with open(args.conffile) as cfghdl:
+        exec(cfghdl.read(), confdefs)
+    vars(args).update(confdefs)
 
-    if not args.clients:
+    if not hasattr(args, "clients"):
         cmd.error("config file does not declare the clients dict")
+
+    if not hasattr(args, "nsupdatecommands"):
+        cmd.error("config file does not define the `nsupdatecommands` function")
 
     # check https IP:PORT string
     if args.https:
