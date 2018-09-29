@@ -22,7 +22,7 @@ It lets you easily create a dyndns.org-like service, using your own DNS server, 
 
 `sftdyn` is for you if you host a DNS zone and can run a Python server so it updates the nameserver records.
 This guide assumes that you're using bind, your zone is `dyn.sft.mx`, and your server's IP is `12.345.678.90`.
-It's mediocre likely that you want to adjust that.
+Substitute the correct values for zone and IP as you use this guide.
 
 
 ### Nameserver
