@@ -47,7 +47,8 @@ def stringtoipport(txt):
         (ip, port) where ip is a string and port is an int
     """
 
-    defaultip = "::"
+    # listen on any interface.
+    defaultip = ""
 
     if isinstance(txt, int):
         return defaultip, txt
