@@ -12,7 +12,7 @@ from .args import parse_args
 from .util import log_setup
 
 
-VERSION = "0.8"
+VERSION = "0.9"
 
 
 def main():
