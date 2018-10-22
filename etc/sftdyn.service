@@ -4,7 +4,7 @@ After=network.target
 
 [Service]
 User=named
-ExecStart=/usr/bin/env python3 -m sftdyn -v
+ExecStart=/usr/bin/env python3 -u -m sftdyn -v
 Restart=on-failure
 
 [Install]
