@@ -40,7 +40,7 @@ zone "dyn.sft.mx" IN {
 };
 ```
 
-`/var/cache/bind` must be writable for *bind*.
+`/var/cache/bind` and `/etc/bind/dyn.sft.mx.zone` must be writable for *bind*.
 
 Create the empty zone file
 
