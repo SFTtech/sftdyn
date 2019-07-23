@@ -83,6 +83,12 @@ class Server:
             (status, httpcode) after examining the key
         """
 
+        if not headers:
+            headers = dict()
+        else:
+            if 'X-Real-IP' in headers:
+                ip = headers['X-Real-IP']
+
         if not key:
             return ip, 200
 
@@ -95,9 +101,6 @@ class Server:
             return "UPTODATE", 200
 
         info("update request for %s => %s" % (host, ip))
-
-        if not headers:
-            headers = dict()
 
         # call to user-defined function
         cmdlist = self.nsupdatecommands(host, ip, headers)
