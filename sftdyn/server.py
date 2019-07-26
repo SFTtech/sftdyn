@@ -83,10 +83,9 @@ class Server:
             (status, httpcode) after examining the key
         """
 
-        if headers:
-            ip = self.get_ip(ip, headers)
-        else:
+        if headers is None:
             headers = dict()
+        ip = self.get_ip(ip, headers)
 
         if not key:
             return ip, 200
