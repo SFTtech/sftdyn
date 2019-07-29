@@ -87,7 +87,7 @@ def parse_args(intro):
         cmd.error("config file does not declare the clients dict")
 
     if not hasattr(args, "get_ip"):
-        args['get_ip'] = None
+        setattr(args, 'get_ip', None)
 
     if not hasattr(args, "nsupdatecommands"):
         cmd.error("config file does not define the `nsupdatecommands` function")
