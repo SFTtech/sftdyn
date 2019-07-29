@@ -15,7 +15,7 @@ class Server:
     HTTP(S) server for DNS record update requests.
     """
 
-    def __init__(self, addr, clients, associations, nsupdatecommands, tls=None):
+    def __init__(self, addr, clients, associations, get_ip, nsupdatecommands, tls=None):
         """
         addr: (ip, port) to listen on
         clients: {dnsclient: dnshostname} map of allowed clients
@@ -28,6 +28,7 @@ class Server:
         self.addr = addr
         self.clients = clients
         self.associations = associations
+        self.get_ip = get_ip
         self.nsupdatecommands = nsupdatecommands
 
         if tls:
@@ -85,7 +86,8 @@ class Server:
 
         if headers is None:
             headers = dict()
-        ip = self.get_ip(ip, headers)
+        if self.get_ip is not None:
+            ip = self.get_ip(ip, headers)
 
         if not key:
             return ip, 200
