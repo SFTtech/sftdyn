@@ -35,6 +35,7 @@ def main():
         http_server = server.Server(args.http,
                                     args.clients,
                                     associations,
+                                    args.get_ip,
                                     args.nsupdatecommands)
         info("starting http server at %s:%d" % args.http)
         loop.run_until_complete(http_server.listen(loop))
@@ -43,6 +44,7 @@ def main():
         https_server = server.Server(args.https,
                                      args.clients,
                                      associations,
+                                     args.get_ip,
                                      args.nsupdatecommands,
                                      tls=(args.cert, args.key))
         info("starting https server at %s:%d" % args.https)
