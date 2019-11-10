@@ -12,7 +12,7 @@ from .args import parse_args
 from .util import log_setup
 
 
-VERSION = "0.9"
+VERSION = "0.10"
 
 
 def main():
@@ -33,7 +33,7 @@ def main():
 
     if args.http:
         http_server = server.Server(args.http,
-                                    args.clients,
+                                    args.get_host,
                                     associations,
                                     args.get_ip,
                                     args.nsupdatecommands)
@@ -42,7 +42,7 @@ def main():
 
     if args.https:
         https_server = server.Server(args.https,
-                                     args.clients,
+                                     args.get_host,
                                      associations,
                                      args.get_ip,
                                      args.nsupdatecommands,

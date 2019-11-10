@@ -83,8 +83,9 @@ def parse_args(intro):
         exec(cfghdl.read(), confdefs)
     vars(args).update(confdefs)
 
-    if not hasattr(args, "clients"):
-        cmd.error("config file does not declare the clients dict")
+    if not hasattr(args, "get_host"):
+        cmd.error("config file does not provide `get_host`"
+                  " function to look up client hostnames")
 
     if not hasattr(args, "get_ip"):
         setattr(args, 'get_ip', None)
@@ -118,6 +119,5 @@ def parse_args(intro):
 
         if not Path(args.key).is_absolute():
             args.key = str(conffolder / args.key)
-
 
     return args

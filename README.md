@@ -21,7 +21,7 @@ It lets you easily create a dyndns.org-like service, using your own DNS server, 
 ## Quick Guide
 
 `sftdyn` is for you if you host a DNS zone and can run a Python server so it updates the nameserver records.
-This guide assumes that you're using bind, your zone is `dyn.sft.mx`, and your server's IP is `12.345.678.90`.
+This guide assumes that you're using [BIND](https://en.wikipedia.org/wiki/BIND), your zone is `dyn.sft.mx`, and your server's IP is `12.345.678.90`.
 Substitute the correct values for zone and IP as you use this guide.
 
 
@@ -48,11 +48,11 @@ Create the empty zone file
 cp /etc/bind/db.empty /etc/bind/dyn.sft.mx.zone
 ```
 
-If you want to use `dyn.sft.mx` as the hostname for your update requests, add a record to the zone file:
+If you want to use `dyn.sft.mx` as the hostname for the server that gets IP update requests later, add a record to the zone file (this requires the `sftdyn`-server to have this static IP, `@` means the zone name itself).
 
 ```
-@ IN A 12.345.678.90
-@ IN AAAA some:ipv6::address
+@ 10m IN A 12.345.678.90
+@ 10m IN AAAA some:ipv6::address
 ```
 
 
@@ -66,6 +66,9 @@ Configuration is by command-line parameters and conf file.
 A sample conf file is provided in `etc/sample.conf`.
 If no conf file name is provided, `/etc/sftdyn/conf` is used.
 Hostnames/update keys are specified in the conf file.
+
+`sftdyn` _should_ run under the same user as your DNS server, or it _might_ not be able to update it properly.
+
 
 #### systemd service
 
@@ -96,6 +99,22 @@ Because of the above reason, you _should_ use HTTPS to keep your update url toke
 For that, your server needs a X.509 key and certificate.
 You can create those with [let's encrypt](https://letsencrypt.org/), buy those somewhere, or create a self-signed one.
 
+
+##### Let's Encrypt
+
+If you got a certificate by [Let's Encrypt](https://letsencrypt.org/), configure `sftdyn` to use it:
+
+```
+# in sftdyn.conf:
+key = "/etc/letsencrypt/live/host.name.lol/privkey.pem"
+cert = "/etc/letsencrypt/live/host.name.lol/fullchain.pem"
+```
+
+Make sure the certificate is valid for the domain your `sftdyn` is getting requests for.
+
+A `https` request to `sftdyn` to update an IP will then be secure™ (e.g. with `curl`).
+
+
 ##### Self-signed certificate
 
 To generate `server.key` and a self-signed `server.crt` valid for 1337 days:
@@ -107,9 +126,9 @@ openssl x509 -req -days 1337 -in server.csr -signkey server.key -out server.crt
 rm server.csr
 ```
 
-Make sure you enter your server's domain name for _Common Name_.
+Make sure you enter your server's domain name for _Common Name_ (the hostname you'll use for querying `sftdyn` with clients.
 
-`sftdyn` _should_ run under the same user as your DNS server, or it _might_ not be able to update it properly.
+A `https` request to `sftdyn` to update an IP will then be more secure™ than a globally valid certificate like from Let's Encrypt, but you'll need to transfer the `server.crt` to the device performing the request (e.g. with `curl`).
 
 
 ### Client
@@ -118,11 +137,12 @@ The client triggers the IP update at the `sftdyn` server, so your DNS then deliv
 
 #### Plastic router
 
-To use your router as client, select _user-defined provider_, enter http://dyn.sft.mx:8080/yourupdatekey as the update URL, and random stuff as domain name/user name/password. (tested with my AVM Fritz!Box. YMMV). Most routers don't support HTTPS update requests (especially not with custom CA-cert, so you'll probably need HTTP.
+To use your cheap plastic router as client, select _user-defined provider_, enter http://dyn.sft.mx:8080/yourupdatekey as the update URL, and random stuff as domain name/user name/password (tested with my AVM Fritz!Box. YMMV).
+Most routers don't support HTTPS update requests (especially not with custom CA-cert, so you'll probably need HTTP.
 
 #### Request with `curl`
 
-If you want to update the external IP of some network, and a machine in that network can use `curl`, choose this client method.
+If you want to update the external IP of some NAT gateway (like home router, ...), and you have a machine in that network which can use `curl`, choose this client method.
 
 If you use HTTPS with a self-signed certificate, `curl` will refuse to talk to the server.
  - Use `curl -k` to ignore the error (Warning: see the security considerations below).
@@ -194,9 +214,11 @@ Cronjobs are the legacy variant to periodically run a task, you could do this li
 ## About
 
 This software was written after the free `dyndns.org` service was shut down.
-After a week or so of using plain `nsupdate`, I was annoyed enough to decide to write this.
+After a week or so of using plain `nsupdate`, we were annoyed enough to decide to write this.
 
-It is the main goal to stay as minimal as possible; for example, I deliberately didn't implement a way to specify the hostname or IP that you want to update; just a simple secret update key is perfectly good for the intended purpose. If you feel like it, you can make the update key look like a more complex request; every character is allowed. Example: `?host=test.sft.mx&key=90bbd8698198ea76`.
+The main goal of this tool is to stay as minimal as possible; for example, we deliberately didn't implement a way to specify the hostname or IP that you want to update; just a simple secret update key is perfectly good for the intended purpose.
+If you feel like it, you can make the update key look like a more complex request; every character is allowed.
+Example: `host=test.sft.mx,key=90bbd8698198ea76`.
 
 The conf file is interpreted as python code, so you can do arbitrarily complex stuff there.
 
@@ -213,17 +235,16 @@ Somebody who knows a valid udpate key could semi-effectively DOS your server by 
 
 ## Development
 
-IMHO, the project is feature-complete; it has everything that **I** currently need.
+For us, the project is feature-complete, it has everything that **we** currently need.
+If you actually _did_ implement a useful feature, please send a pull request; We'd be happy to merge it.
 
-If you have any requests, ideas, feedback or bug reports,
-are simply filled with pure hatred,
-or just need help getting the damn thing to run,
+If you have any **requests**, **ideas**, **feedback** or **bug reports**,
+are simply **filled with pure hatred**,
+or just **need help** getting the damn thing to run,
 join our chatroom and just ask:
 
-- IRC: `irc.freenode.net/#sfttech`
-- Matrix: `#SFTtech:matrix.org`
+- Matrix: [`#sfttech:matrix.org`](https://riot.im/app/#/room/#sfttech:matrix.org)
+- IRC: [`irc.freenode.net #sfttech`](https://webchat.freenode.net/?channels=sfttech)
 
-
-If you actually _did_ implement a useful feature, please send a pull request; I'd be happy to merge it.
 
 The license is GNU GPLv3 or higher.

@@ -15,18 +15,19 @@ class Server:
     HTTP(S) server for DNS record update requests.
     """
 
-    def __init__(self, addr, clients, associations, get_ip, nsupdatecommands, tls=None):
+    def __init__(self, addr, get_host, associations, get_ip, nsupdatecommands, tls=None):
         """
         addr: (ip, port) to listen on
-        clients: {dnsclient: dnshostname} map of allowed clients
+        get_host: function that provides hostname to update
         associations: {dnshostname: ipaddr} map to cache current dynamic ips
+        get_ip: function that can update the ip to set, e.g. by headers
         nsupdatecommands: function to generate the `nsupdate` stdin,
                           will be called with `host` and `new_ip` args.
         tls: (cerfilename, keyfilename) to use for the tls socket
         """
 
         self.addr = addr
-        self.clients = clients
+        self.get_host = get_host
         self.associations = associations
         self.get_ip = get_ip
         self.nsupdatecommands = nsupdatecommands
@@ -86,15 +87,17 @@ class Server:
 
         if headers is None:
             headers = dict()
+
+        # call to user-defined function
         if self.get_ip is not None:
-            ip = self.get_ip(ip, headers)
+            ip = self.get_ip(ip, headers, key)
 
         if not key:
             return ip, 200
 
-        try:
-            host = self.clients[key]
-        except KeyError:
+        # call to user-defined function
+        host = self.get_host(key, ip)
+        if not host:
             return "BADKEY", 403
 
         if self.associations.get(host, None) == ip:
