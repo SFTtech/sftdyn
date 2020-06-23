@@ -38,6 +38,8 @@ class Server:
                 purpose=ssl.Purpose.CLIENT_AUTH
             )
             self.sslcontext.load_cert_chain(tls[0], tls[1])
+            self.sslcontext.options |= ssl.OP_NO_TLSv1
+            self.sslcontext.options |= ssl.OP_NO_TLSv1_1
         else:
             self.sslcontext = None
 
