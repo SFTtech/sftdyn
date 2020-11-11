@@ -26,10 +26,8 @@ def get_parser(intro):
     cmd.add_argument("-k", "--key", type=str, help="HTTPS X.509 key file")
     cmd.add_argument("-i", "--interactive", action="store_true",
                      help="launch a interactive session")
-
     cmd.add_argument("--nskeyfile", type=str,
                      help="optional keyfile for nsupdate")
-
     cmd.add_argument("-d", "--debug", action="store_true",
                      help="enable asyncio debugging")
     cmd.add_argument("-v", "--verbose", action="count", default=0,

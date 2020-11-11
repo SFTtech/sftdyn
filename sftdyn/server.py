@@ -6,7 +6,7 @@ http(s) server implementation for sftdyn.
 import ssl
 import asyncio
 
-from logging import info
+from logging import info, debug
 from aiohttp import web
 
 
@@ -118,7 +118,7 @@ class Server:
         if self.nskeyfile:
             nsupdate.extend(['-k', self.nskeyfile])
 
-        info('executing command: %s' % (nsupdate, ))
+        debug('executing command: %s' % (nsupdate, ))
         proc = await asyncio.create_subprocess_exec(
             *nsupdate,
             stdin=asyncio.subprocess.PIPE

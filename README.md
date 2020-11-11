@@ -67,7 +67,9 @@ A sample conf file is provided in `etc/sample.conf`.
 If no conf file name is provided, `/etc/sftdyn/conf` is used.
 Hostnames/update keys are specified in the conf file.
 
-`sftdyn` _should_ run under the same user as your DNS server, or it _might_ not be able to update it properly.
+`sftdyn` _should_ run under the same user as your DNS server, or it _might_
+not be able to update it properly. Alternatively, to run sftdyn as the user of
+your choice, see Advanced setup later in this article.
 
 
 #### systemd service
@@ -257,19 +259,13 @@ zone "dyn.sft.mx" IN {
 };
 ```
 
-##### Change sftdyn startup options to use the key
+##### Change sftdyn configuration to use the key
 
-Change your sftdyn startup to provide the `--nskeyfile` argument pointing to
-the generated keyfile.
-
-If using the systemd service, either modify the installed `/etc/systemd/system/sftdyn.service`, or if your
-sftdyn is installed from a distribution package, create an override with the command
-`systemctl edit sftdyn.service`:
+Edit the nskeyfile option in the configuration file, by default located in
+`/etc/sftdyn/conf`:
 
 ```
-[Service]
-ExecStart=
-ExecStart=/usr/bin/env python3 -u -m sftdyn -v --nskeyfile=/etc/bind/sftdyn.key
+nskeyfile = "/etc/bind/keys/sftdyn.key"
 ```
 
 ## About
