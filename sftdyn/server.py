@@ -6,7 +6,7 @@ http(s) server implementation for sftdyn.
 import ssl
 import asyncio
 
-from logging import info
+from logging import info, debug
 from aiohttp import web
 
 
@@ -15,7 +15,9 @@ class Server:
     HTTP(S) server for DNS record update requests.
     """
 
-    def __init__(self, addr, get_host, associations, get_ip, nsupdatecommands, tls=None):
+    def __init__(self, addr, get_host, associations, get_ip,
+            nsupdatecommands, nskeyfile=None, tls=None):
+
         """
         addr: (ip, port) to listen on
         get_host: function that provides hostname to update
@@ -31,6 +33,7 @@ class Server:
         self.associations = associations
         self.get_ip = get_ip
         self.nsupdatecommands = nsupdatecommands
+        self.nskeyfile = nskeyfile
 
         if tls:
             # create SSLContext for our TLS server
@@ -111,8 +114,13 @@ class Server:
         iter(cmdlist)  # check if the generated updatecommand is iterable
         cmd = "\n".join(cmdlist) + "\n"
 
+        nsupdate = ['nsupdate', '-l']
+        if self.nskeyfile:
+            nsupdate.extend(['-k', self.nskeyfile])
+
+        debug('executing command: %s' % (nsupdate, ))
         proc = await asyncio.create_subprocess_exec(
-            'nsupdate', '-l',
+            *nsupdate,
             stdin=asyncio.subprocess.PIPE
         )
         proc.stdin.write(cmd.encode())

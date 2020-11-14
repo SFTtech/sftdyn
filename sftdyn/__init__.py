@@ -36,7 +36,8 @@ def main():
                                     args.get_host,
                                     associations,
                                     args.get_ip,
-                                    args.nsupdatecommands)
+                                    args.nsupdatecommands,
+                                    nskeyfile=args.nskeyfile)
         info("starting http server at %s:%d" % args.http)
         loop.run_until_complete(http_server.listen(loop))
 
@@ -46,6 +47,7 @@ def main():
                                      associations,
                                      args.get_ip,
                                      args.nsupdatecommands,
+                                     nskeyfile=args.nskeyfile,
                                      tls=(args.cert, args.key))
         info("starting https server at %s:%d" % args.https)
         loop.run_until_complete(https_server.listen(loop))
