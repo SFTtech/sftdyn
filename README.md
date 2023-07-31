@@ -308,8 +308,7 @@ are simply **filled with pure hatred**,
 or just **need help** getting the damn thing to run,
 join our chatroom and just ask:
 
-- Matrix: [`#sfttech:matrix.org`](https://riot.im/app/#/room/#sfttech:matrix.org)
-- IRC: [`irc.freenode.net #sfttech`](https://webchat.freenode.net/?channels=sfttech)
+- Matrix: [`#sfttech:matrix.org`](https://matrix.to/#/#sfttech:matrix.org)
 
 
 The license is GNU GPLv3 or higher.
