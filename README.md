@@ -1,14 +1,16 @@
 # sftdyn dynamic dns server
 
-`sftdyn` is a minimalistic dynamic DNS server that accepts update requests via HTTP(S) and forwards them to a locally running DNS server via `nsupdate -l`.
+`sftdyn` is a minimalistic dynamic DNS server that accepts update requests via `http` or `https` and forwards them to a locally running DNS server via `nsupdate -l`.
+You can use it to easily update IPs of hosts in a domain whose IPs are not static and change to unpredictable addresses.
 
-It lets you easily create a dyndns.org-like service, using your own DNS server, and can (probably) be used with your router.
+It lets you easily create a dyndns.org-like service, using your own DNS server, and can (probably) be used with your router at home.
 
 ## Operation
 
-* Some device submits a https request to a "secret URL" of `sftdyn`
-* From this, `sftdyn` knows the request origin IP
-* From the "secret URL", `sftdyn` updates the DNS record of the associated hostname
+* You have a domain, e.g. `sft.rofl`, and a subdomain for dynamic entries, e.g. `dyn.sft.rofl`
+* The device whose IP address you want to store submits a https request to the `sftdyn` server containing a secret token, in order to update `devicename.dyn.sft.rofl`
+* From this, the `sftdyn` server knows the request origin IP
+* From the secret token, `sftdyn` can associate a hostname to update its DNS record (`devicename.dyn.sft.rofl`)
 * The request therfore updated an IP in your zone
 
 
@@ -18,10 +20,10 @@ It lets you easily create a dyndns.org-like service, using your own DNS server, 
 * [`aiohttp`](https://aiohttp.readthedocs.io/)
 
 
-## Quick Guide
+## Setup Guide
 
 `sftdyn` is for you if you host a DNS zone and can run a Python server so it updates the nameserver records.
-This guide assumes that you're using [BIND](https://en.wikipedia.org/wiki/BIND), your zone is `dyn.sft.mx`, and your server's IP is `12.345.678.90`.
+This guide assumes that you're using [BIND](https://en.wikipedia.org/wiki/BIND), your zone is `dyn.sft.rofl`, and your server's IP is `12.345.678.90`.
 Substitute the correct values for zone and IP as you use this guide.
 
 
@@ -29,34 +31,50 @@ Substitute the correct values for zone and IP as you use this guide.
 
 `bind` has to be configured to serve the updatable zone.
 
-Somewhere in `named.conf`, add
+You probably have a zonefile for `sft.rofl` already.
+You need to delegate `dyn.sft.rofl` to the local nameserver.
+
+In the `sft.rofl` zone, add `NS records` to the new dynamic zone we're about to create:
 
 ```
-zone "dyn.sft.mx" IN {
+# so the dyn.sft.rofl zone is delegated to the nameserver running sftdyn.
+# likely you need the same NS record as for the sft.rofl zone itself.
+dyn 30m IN NS yournameserver's_a_record
+```
+
+Now let's create the `dyn.sft.rofl` zone, where all the dynamic records will live.
+Somewhere in `named.conf`, add the new dynamic zone:
+
+```
+zone "dyn.sft.rofl" IN {
     type master;
-    file "/etc/bind/dyn.sft.mx.zone";
-    journal "/var/cache/bind/dyn.sft.mx.zone.jnl";
+    file "/etc/bind/dyn.sft.rofl.zone";
+    journal "/var/cache/bind/dyn.sft.rofl.zone.jnl";
     update-policy local;
 };
 ```
 
-`/var/cache/bind` and `/etc/bind/dyn.sft.mx.zone` must be writable for *bind*.
+`/var/cache/bind` and `/etc/bind/dyn.sft.rofl.zone` must be writable for *bind*.
 
 Create the empty zone file
 
 ```
-cp /etc/bind/db.empty /etc/bind/dyn.sft.mx.zone
+cp /etc/bind/db.empty /etc/bind/dyn.sft.rofl.zone
 ```
 
-If you want to use `dyn.sft.mx` as the hostname for the server that gets IP update requests later, add a record to the zone file (this requires the `sftdyn`-server to have this static IP, `@` means the zone name itself).
+We also can define a hostname to send the IP update requests to within the `dyn.sft.rofl` zone, or even use `dyn.sft.rofl` itself.
+`@` means the zone name itself.
 
 ```
+# within the dyn.sft.rofl zonefile, we set the IP for the dyn.sft.rofl host itself.
+# this is the ip of the nameserver itself, where sftdyn is running.
+# -> you can then send update requests to https://dyn.sft.rofl/...
 @ 10m IN A 12.345.678.90
 @ 10m IN AAAA some:ipv6::address
 ```
 
 
-### sftdyn
+### sftdyn server setup
 
 To install *sftdyn*, use `pip install sftdyn` or `./setup.py install`.
 
@@ -101,10 +119,45 @@ Because of the above reason, you _should_ use HTTPS to keep your update url toke
 For that, your server needs a X.509 key and certificate.
 You can create those with [let's encrypt](https://letsencrypt.org/), buy those somewhere, or create a self-signed one.
 
+##### Reverse proxy
+
+Your server running `sftdyn` may already have a webserver (e.g. nginx) to handle other web requests.
+It may already have proper certificates setup (e.g. with letsencrypt) - which you can just reuse for sftdyn.
+
+If you have `nginx`, the following config block will redirect requests to `dyn.sft.rofl` to the `sftdyn` server.
+
+Remember to use the `X-Forwarded-For` header in the `sftdyn` config (in `get_ip`) as the client ip!
+
+```nginx
+server {
+    server_name dyn.sft.rofl;
+
+    // ...
+
+    location / {
+        # with this line, nginx relays the request to sftdyn
+        proxy_pass http://localhost:8080/;
+
+        # remember the original ip - we need to extract it in get_ip
+        # in the sftdyn config then!
+        proxy_set_header X-Forwarded-For $remote_addr;
+        proxy_set_header Host            $host;
+    }
+
+    // ...
+}
+```
+
+Alternatively, you can add the location block with `location /dyn` or something to some existing server block.
+
+In any way, you can then submit requests to the regular https port since you send to nginx now.
+-> remove `:4443` in the client requests.
+
 
 ##### Let's Encrypt
 
-If you got a certificate by [Let's Encrypt](https://letsencrypt.org/), configure `sftdyn` to use it:
+If you don't want to use a reverse proxy to terminate the tls connection, you can directly configure `sftdyn` to use the certificate.
+To use a certificate by [Let's Encrypt](https://letsencrypt.org/) directly in `sftdyn`:
 
 ```
 # in sftdyn.conf:
@@ -135,28 +188,41 @@ A `https` request to `sftdyn` to update an IP will then be more secure™ than a
 
 ### Client
 
+The client is the device whose IP we want to update in the dynamic zone.
+Common clients are your plastic router at home that changes it's DSL IP address from time to time.
+
 The client triggers the IP update at the `sftdyn` server, so your DNS then delivers the correct IP.
 
 #### Plastic router
 
-To use your cheap plastic router as client, select _user-defined provider_, enter http://dyn.sft.mx:8080/yourupdatekey as the update URL, and random stuff as domain name/user name/password (tested with my AVM Fritz!Box. YMMV).
+Cheap plastic routers often have built-in dynamic dns update support.
+Since `sftdyn` is not that well known, within the plastic router's web UI you need to select something like _user-defined provider_, and enter http://dyn.sft.rofl:8080/yourupdatekey as the update URL.
+Write random stuff as name/user name/password, since just the update URL is the secret alone (tested with my AVM Fritz!Box. YMMV).
 Most routers don't support HTTPS update requests (especially not with custom CA-cert, so you'll probably need HTTP.
+
+If you set up `sftdyn` with let's encrypt, https may work - just test it :)
 
 #### Request with `curl`
 
 If you want to update the external IP of some NAT gateway (like home router, ...), and you have a machine in that network which can use `curl`, choose this client method.
 
-If you use HTTPS with a self-signed certificate, `curl` will refuse to talk to the server.
- - Use `curl -k` to ignore the error (Warning: see the security considerations below).
- - Copy `server.crt` to the client, and use `curl --cacert server.crt`.
+If you use HTTPS with a let's encrypt certificate, `curl` will be happy to request with encryption
 
-| HTTP code     | Text          | Response interpretation             |
-| ------------- | ------------- | ----------------------------------- |
-| 200           | OK            | Update successful                   |
-| 200           | UPTODATE      | Update unneccesary                  |
-| 403           | BADKEY        | Unknown update key                  |
-| 500           | FAIL          | Internal error (see the server log) |
-| 200           | _your ip_     | Returned if no key is provided      |
+If you use a self-signed certificate, `curl` will refuse to talk to the server (because it obviously can't trust it without knowing it).
+To make `curl` trust the self-signed certificate:
+ - Copy `server.crt` to the client, and use `curl --cacert server.crt`.
+Alternatively, to let `curl` ignore the security problem and just accept whatever it gets:
+ - Use `curl -k` to ignore the error (Warning: see the security considerations below).
+
+The result codes mean the following:
+
+| HTTP code     | Text          | Response interpretation                         |
+| ------------- | ------------- | ----------------------------------------------- |
+| 200           | OK            | Update successful                               |
+| 200           | UPTODATE      | Update unneccesary                              |
+| 403           | BADKEY        | Unknown update key                              |
+| 500           | FAIL          | Internal error (see the server log)             |
+| 200           | _your ip_     | Returned if no association key is provided      |
 
 ##### systemd timer
 
@@ -183,7 +249,7 @@ Description=SFTdyn name update
 [Service]
 Type=oneshot
 User=nobody
-ExecStart=/usr/bin/env curl -f -s --cacert /path/to/server.crt https://dyn.sft.mx:4443/yoursecretupdatekey
+ExecStart=/usr/bin/env curl -f -s --cacert /path/to/server.crt https://dyn.sft.rofl:4443/yoursecretupdatekey
 ```
 
 Activate the timer firing with:
@@ -209,7 +275,7 @@ sudo systemctl start sftdyn.service
 Cronjobs are the legacy variant to periodically run a task, you could do this like this:
 
 ```
-*/10 * * * * curl https://dyn.sft.mx:4443/mysecretupdatekey
+*/10 * * * * curl https://dyn.sft.rofl:4443/mysecretupdatekey
 ```
 
 
@@ -283,7 +349,7 @@ After a week or so of using plain `nsupdate`, we were annoyed enough to decide t
 
 The main goal of this tool is to stay as minimal as possible; for example, we deliberately didn't implement a way to specify the hostname or IP that you want to update; just a simple secret update key is perfectly good for the intended purpose.
 If you feel like it, you can make the update key look like a more complex request; every character is allowed.
-Example: `host=test.sft.mx,key=90bbd8698198ea76`.
+Example: `host=test.sft.rofl,key=90bbd8698198ea76`.
 
 The conf file is interpreted as python code, so you can do arbitrarily complex stuff there.
 
